@@ -37,8 +37,8 @@ services:
       POSTGRES_DB: combined_weather
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
-      KAGGLE_USERNAME: "supercrafter100"
-      KAGGLE_KEY: "KGAT_b0d7fdced307fb8d0b1a2b8a8f509b88"
+      KAGGLE_USERNAME: ${KAGGLE_USERNAME}
+      KAGGLE_KEY: ${KAGGLE_KEY}
     volumes:
       - ./dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
