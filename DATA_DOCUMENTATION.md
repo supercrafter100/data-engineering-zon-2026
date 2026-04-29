@@ -314,6 +314,26 @@ SELECT * FROM metadata_column WHERE dataset_name = 'productie_comnbined';
 SELECT * FROM metadata_relation WHERE relation_type = 'drives';
 ```
 
+### Visualisatie in Grafana
+
+Grafana wordt automatisch geprovisioneerd via [grafana/provisioning/](grafana/provisioning/):
+
+- **Datasource** `combined_weather` (PostgreSQL, uid `combined_weather_pg`) — [postgres.yml](grafana/provisioning/datasources/postgres.yml)
+- **Dashboard** "Data Catalog" — [data_catalog.json](grafana/dashboards/data_catalog.json)
+
+Dashboard-panelen:
+
+| Panel | Inhoud |
+|---|---|
+| Stats × 3 | aantal datasets / kolommen / relaties |
+| Tabel "Datasets" | naam, bron, periode, granulariteit, licentie, rijen |
+| Tabel "Kolommen ($dataset)" | filterbaar via dropdown-variabele |
+| Tabel "Relaties" | gerichte links tussen variabelen |
+| Bar chart | aantal kolommen per dataset |
+| Tabel "Looptijd" | periode in dagen per dataset |
+
+Bekijk via http://localhost:3000 (admin/admin) na `docker compose up -d` en een trigger van `metadata_pipeline`.
+
 ---
 
 ## 10. Open punten / next steps
