@@ -3,11 +3,19 @@
 > Project: `combineren`
 > Auteur: Stijn Voeten (AP Hogeschool Antwerpen, Data Engineering 2025-2026)
 > Laatst bijgewerkt: 2026-04-29
-> Doel: alle ruwe brondata over weer, hernieuwbare productie en elektriciteitsverbruik in België/Vlaanderen verzamelen, beschrijven, transformeren en orkestreren tot één coherente analytische dataset.
+> Doel: alle ruwe brondata over weer, hernieuwbare productie en elektriciteitsverbruik in België/Vlaanderen verzamelen, beschrijven, transformeren en orkestreren tot één coherente analytische dataset, **met als einddoel het voorspellen van de hernieuwbare energieproductie (zon + wind) op basis van een weersvoorspelling**. De gemodelleerde verbanden tussen meteo-variabelen en productie zijn daarmee niet decoratief — ze zijn de eigenlijke modelinput.
 
 ---
 
 ## 1. Bredere context (contextual embedding)
+
+### 1.0 Projectdoel — voorspellen van hernieuwbare productie op basis van weer
+
+Het concrete doel van dit project is **het voorspellen van de opgewekte hernieuwbare energie (zon en wind) aan de hand van een weersvoorspelling**. De ETL-pipeline en het sterschema zijn daar volledig op gericht: we verzamelen de meteo-variabelen die fysisch bepalend zijn voor de productie (kortgolvige straling voor PV, windsnelheid voor windturbines) **samen** met de werkelijke gemeten productie van Elia/VEKA, zodat een model het verband tussen beide kan leren.
+
+Daarom is sectie [3. Relaties tussen variabelen](#3-relaties-tussen-variabelen) inhoudelijk de kern van dit document: elke gedocumenteerde relatie tussen een meteo-kolom en een productie-kolom is tegelijk een **kandidaat-feature** voor het voorspellingsmodel. Het kruisvalideren van meerdere bronnen voor dezelfde grootheid (vier windbronnen, drie stralingsbronnen) is geen overdaad maar dient om de **robuustheid** van die features tegen ontbrekende of biased meetstations te garanderen — input-kwaliteit bepaalt rechtstreeks de voorspelkwaliteit.
+
+### 1.1 Energie-context
 
 België haalt ondertussen een groot deel van zijn elektriciteit uit hernieuwbare bronnen. De netbeheerder **Elia** publiceert hiervoor open data via **Open Data Portal Elia** (https://opendata.elia.be). Twee dominante hernieuwbare bronnen zijn:
 
@@ -110,6 +118,8 @@ Alle CSV's bevinden zich in `datasets/`. Encoding: **UTF-8**. Scheiding: **komma
 ---
 
 ## 3. Relaties tussen variabelen
+
+> Deze sectie is de **scharnier** tussen brondata en het projectdoel (productie voorspellen op basis van weer): elk verband hieronder is tegelijk een fysisch model én een feature voor het voorspellingsmodel. Een weersvoorspelling levert de input-variabelen (`wind_*`, `*_radiation`); het model leert via deze relaties de doel-variabelen (`*_zon_kwh`, `*_wind_kwh`).
 
 ```
    STRALING (W/m²)            WIND (m/s)
