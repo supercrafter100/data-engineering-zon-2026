@@ -281,7 +281,42 @@ fetch_wind  fetch_radiation fetch_prod   fetch_cons
 
 ---
 
-## 9. Open punten / next steps
+## 9. Metadata zelf in de database (data catalog)
+
+De metadata uit dit document wordt ook **als data** in dezelfde Postgres geladen, zodat de catalog opvraagbaar is via SQL en visualiseerbaar in Grafana / pgAdmin.
+
+**Schema:**
+
+| Tabel | Inhoud |
+|---|---|
+| `metadata_dataset` | één rij per dataset (naam, bron, periode, encoding, licentie, …) |
+| `metadata_column` | één rij per kolom met type, eenheid en betekenis |
+| `metadata_relation` | gerichte relaties tussen variabelen (bv. wind → windproductie) |
+
+DDL staat in [init.sql](init.sql) en wordt ook idempotent door de DAG zelf gegarandeerd.
+
+**Pipeline:** [`dags/metadata_pipeline.py`](dags/metadata_pipeline.py) — DAG `metadata_pipeline`:
+
+```
+create_schema → upsert_datasets ─┬─→ upsert_columns
+                                 └─→ upsert_relations
+```
+
+- **Schedule:** `None` (manuele trigger of via `airflow dags trigger metadata_pipeline`); metadata verandert weinig.
+- **Idempotent**: `INSERT ... ON CONFLICT DO UPDATE` op natural keys (`name`, `(dataset_name, name)`, `(source_dataset, source_column, target_dataset, target_column)`).
+- Geen XCom: alle definities zijn Python-constanten in dezelfde module, één engine per task.
+
+Voorbeeld-query's na een run:
+
+```sql
+SELECT name, period_start, period_end, row_count FROM metadata_dataset;
+SELECT * FROM metadata_column WHERE dataset_name = 'productie_comnbined';
+SELECT * FROM metadata_relation WHERE relation_type = 'drives';
+```
+
+---
+
+## 10. Open punten / next steps
 
 - [ ] Bronvalidatie van eenheden (MWh vs kWh) voor `consumptie.csv` kolommen Vlaanderen.
 - [ ] Schema voor `fact_productie`, `fact_consumptie`, `fact_wind_obs`, `dim_tijd` toevoegen aan `init.sql`.
